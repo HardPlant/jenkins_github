@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.stat.service.impl.StatMapper">
+
+	<select id="selectStatServiceList"			resultType="statVO">
+		select category_nm categoryNm,
+		       count(title) totalCount,
+		       round((count(title) / (select count(title)
+		                                      from
+		                                    (select   pst.date
+		                                                    ,ctg.category_nm
+		                                                    ,pst.title
+		                                                    ,pst.content
+		                                            from
+		                                                    t_post_category pst_ctg
+		                                                    join
+		                                                        t_hp_post pst
+		                                                    on pst_ctg.fk_post_id = pst.post_id
+		                                                    join
+		                                                        t_hp_category ctg
+		                                                    on pst_ctg.fk_category_id = ctg.category_id
+		                                            union all
+		                                            select   pst.date
+		                                                    ,'없음' category_nm
+		                                                    ,pst.title
+		                                                    ,pst.content
+		                                            from
+		                                                    t_hp_post pst
+		                                            where not exists(
+		                                                select pst.date
+		                                                    ,'없음' category_nm
+		                                                    ,pst.title
+		                                                    ,pst.content
+		                                                from 
+		                                                    t_post_category pst_ctg
+		                                                where pst.post_id = pst_ctg.fk_post_id
+		                                            )) tb)) * 100 
+						  , 0) percent
+		  from (select   pst.date
+		                ,ctg.category_nm
+		                ,pst.title
+		                ,pst.content
+		          from
+		                t_post_category pst_ctg
+		                join
+		                    t_hp_post pst
+		                on pst_ctg.fk_post_id = pst.post_id
+		                join
+		                    t_hp_category ctg
+		                on pst_ctg.fk_category_id = ctg.category_id
+		        union all
+		        select   pst.date
+		                ,'없음' category_nm
+		                ,pst.title
+		                ,pst.content
+		        from
+		                t_hp_post pst
+		        where not exists(
+		            select pst.date
+		                ,'없음' category_nm
+		                ,pst.title
+		                ,pst.content
+		            from 
+		                t_post_category pst_ctg
+		            where pst.post_id = pst_ctg.fk_post_id
+		        )) tb
+		group by category_nm;
+	</select>
+	
+	<select id="selectLastWeekServiceList" 		parameterType="String" resultType="egovMap">
+		select date
+				,count(date) cnt
+		  from t_hp_post
+		 where date &lt;= #{_parameter}
+		 	AND DATE_SUB('2019-01-11', INTERVAL 7 DAY) &lt;= date
+		group by date
+	</select>
+</mapper>

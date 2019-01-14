@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.post.service.impl.PostMapper">
+
+	<select id="selectPostServiceList"			resultType="egovMap">
+		select   post_id
+		        ,title
+		        ,content
+		        ,author
+		        ,date
+		  from
+		        t_hp_post pst;
+	</select>
+	
+	<select id="selectPostSummaryServiceList"	parameterType="int" resultType="egovMap">
+		select   post_id
+		        ,title
+		        ,subtitle
+		        ,author
+		        ,date
+		  from
+		        t_hp_post pst
+		order by date desc
+		<if test="_parameter != null">
+			limit #{parameter}
+		</if>
+		  
+	</select>
+
+	<select id="selectPostServiceWithParamList" parameterType="map" 	resultType="egovMap">
+		select   post_id
+		        ,title
+		        ,subtitle
+		        ,content
+		        ,author
+		        ,date
+		  from
+		        t_hp_post pst
+		<where>
+			<if test="postId != null and postId != ''">
+				post_id = #{postId}
+			</if>
+			<if test="title != null and title != ''">
+				AND title = #{title}
+			</if>
+			<if test="subtitle != null and title != ''">
+				AND subtitle = #{subtitle}
+			</if>
+			<if test="author != null and author != ''">
+				AND author = #{author}
+			</if>
+			<if test="date != null and date != ''">
+				AND date = #{date}
+			</if>
+		</where>
+	</select>
+	
+	<select id="selectCategoryServiceInfo" 	parameterType="String" 	resultType="egovMap">
+		select   pst.title
+				,category_nm
+		        ,image_url
+		  from
+		        t_post_category pst_ctg
+		        join
+		            t_hp_post pst
+		        on pst_ctg.fk_post_id = pst.post_id
+		        join
+		            t_hp_category ctg
+		        on pst_ctg.fk_category_id = ctg.category_id
+		<where>
+			<if test="_parameter != null and _parameter != ''">
+				pst.post_id = #{_parameter}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="insertPostServiceInfo"		parameterType="map">
+		<selectKey resultType="int" keyProperty="postId" order="AFTER">
+	        SELECT LAST_INSERT_ID()
+	    </selectKey>        
+		insert into `t_hp_post` (`title`, `subtitle`,`author`,`date`,`content`)
+		values
+			(#{title}, #{subtitle}, #{author}, #{date}, #{content});
+	</insert>
+	
+	<insert id="insertCategoryServiceInfo"	parameterType="map">
+		<if test="postId != null and postId != '' and categoryId != null and categoryId != ''">
+			insert into `t_post_category` (`fk_post_id`, `fk_category_id`) values
+			(#{postId}, #{categoryId});
+		</if>
+	</insert>
+	
+	<select id="selectCategoryServiceList" 	resultType="egovMap">
+		select  category_id
+				,category_nm
+		  from
+		        t_hp_category ctg;
+	</select>
+</mapper>
